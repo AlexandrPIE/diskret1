@@ -60,7 +60,7 @@ void generateTable(int n, const int vars[], int row, int values[])
 
 // СДНФ / СКНФ
 
-void sdof(int n, int vars[], int answers[], int type, char *group[])
+void sdof(int n, int vars[], int answers[], int type, char group[])
 {
 	int firstGroup = 1;
 	for (int row = 0; row < (1 << n); row++)
@@ -71,11 +71,11 @@ void sdof(int n, int vars[], int answers[], int type, char *group[])
 		{
 			if (!firstGroup)
 			{
-				char znU = type ? '+' : '*';
-				strcat(*group, znU);
+				const char *znU = type ? "+" : "*";
+				strcat(group, znU);
 			}
 			firstGroup = 0;
-			printf("(");
+			strcat(group, "(");
 			int first = 1;
 			for (int i = 0; i < 26; i++)
 			{
@@ -87,13 +87,15 @@ void sdof(int n, int vars[], int answers[], int type, char *group[])
 					}
 					else
 					{
-						char znI = type ? '*' : '+';
-						printf("%c", znI);
+						const char *znI = type ? "*" : "+";
+						strcat(group, znI);
 					}
-					values[i] == !type ? printf("!%c", 'a' + i) : printf("%c", 'a' + i);
+					char a[3] = {'!', 'a' + i, '\0'};
+					char b[2] = {'a' + i, '\0'};
+					values[i] == !type ? strcat(group, a) : strcat(group, b);
 				}
 			}
-			printf(")");
+			strcat(group, ")");
 		}
 	}
 	if (firstGroup)
@@ -101,7 +103,6 @@ void sdof(int n, int vars[], int answers[], int type, char *group[])
 		char *func = type ? "СДНФ" : "СКНФ";
 		printf("Невозможно построить %s из-за того, что в столбце с результатом функции нет значения %d", func, type);
 	}
-	printf("\n");
 }
 
 // Поиск фиктивных переменных
@@ -339,18 +340,19 @@ int main(int argc, char *argv[])
 		answers[row] = numbers[0];
 	}
 
-	char group[1024];
+	char sdnf[1024] = "";
+	char sknf[1024] = "";
 
 	// СДНФ
-	printf("СДНФ: ");
-	sdof(n, vars, answers, 1, &group);
+	sdof(n, vars, answers, 1, sdnf);
+	printf("СДНФ: %s\n", sdnf);
 	// СКНФ
-	printf("СКНФ: ");
-	sdof(n, vars, answers, 0, &group);
+	sdof(n, vars, answers, 0, sknf);
+	printf("СКНФ: %s\n", sknf);
 	// Фиктивные переменные
 	fictiv(n, vars, answers);
 
 	// Задание 7
-	printf("Для базисов {и, или, не}: ");
-	sdof(n, vars, answers, 1, &group);
+	printf("Для базисов {и, или, не}: %s", sdnf);
+	print("Для базиса {^}:");
 }
