@@ -43,6 +43,76 @@ int priority(char z)
 	}
 }
 
+void postfix(char f[], char result[])
+{
+	int len = 0;
+	char stack[1024];
+	int top = 0;
+
+	for (int i = 0; f[i] != '\0'; i++)
+	{
+		char c = f[i];
+		if (c == ' ')
+		{
+			continue;
+		}
+		else if (c >= 'a' && c <= 'z')
+		{
+			result[len] = c;
+			len++;
+		}
+		else if (c == '(')
+		{
+			stack[top] = c;
+			top++;
+		}
+		else if (c == ')')
+		{
+			while (top > 0 && stack[top - 1] != '(')
+			{
+				top--;
+				result[len] = stack[top];
+				len++;
+			}
+			if (top > 0)
+			{
+				top--;
+			}
+		}
+		else
+		{
+			if (top > 0)
+			{
+				if (priority(c) > priority(stack[i - 1]))
+				{
+					stack[top] = c;
+					top++;
+				}
+				else
+				{
+					result[len] = stack[top - 1];
+					stack[top - 1] = c;
+					len++;
+				}
+			}
+			else
+			{
+				stack[0] = c;
+				top++;
+			}
+		}
+	}
+
+	while (top > 0)
+	{
+		top--;
+		result[len] = stack[top];
+		len++;
+	}
+
+	result[len] = '\0';
+}
+
 // Создание таблицы 2**n
 
 void generateTable(int n, const int vars[], int row, int values[])
@@ -144,6 +214,48 @@ void fictiv(int n, const int vars[], int answers[])
 	printf("\n");
 }
 
+// Стрелка Пирса
+
+void pirs(char group[], char result[])
+{
+	int len = strlen(group);
+	char stack[1024][1024];
+	int size = 0;
+	char buffer[4096];
+	for (int i = 0; i < len; i++)
+	{
+		char el = group[i];
+		if (el >= 'a' && el <= 'z')
+		{
+			char symbol[2] = {el, '\0'};
+			strcpy(stack[size], symbol);
+			size++;
+		}
+		else if (el == '!')
+		{
+			sprintf(buffer, "%s ^ %s", stack[size - 1], stack[size - 1]);
+			strcpy(stack[size], buffer);
+			buffer[0] = '\0';
+		}
+		if (el == '*')
+		{
+			sprintf(buffer, "((%s ^ %s) ^ (%s ^ %s))", stack[size - 2], stack[size - 2], stack[size - 1], stack[size - 1]);
+			strcat(result, buffer);
+			size--;
+			buffer[0] = '\0';
+			memset(buffer, 0, sizeof(buffer));
+		}
+		if (el == '+')
+		{
+			sprintf(buffer, "((%s ^ %s) ^ (%s ^ %s))", stack[size - 2], stack[size - 1], stack[size - 2], stack[size - 1]);
+			strcat(result, buffer);
+			size--;
+			buffer[0] = '\0';
+			memset(buffer, 0, sizeof(buffer));
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -187,72 +299,7 @@ int main(int argc, char *argv[])
 	// Постфиксная запись
 
 	char result[1024];
-	int len = 0;
-	char stack[1024];
-	int top = 0;
-
-	for (int i = 0; f[i] != '\0'; i++)
-	{
-		char c = f[i];
-		if (c == ' ')
-		{
-			continue;
-		}
-		else if (c >= 'a' && c <= 'z')
-		{
-			result[len] = c;
-			len++;
-		}
-		else if (c == '(')
-		{
-			stack[top] = c;
-			top++;
-		}
-		else if (c == ')')
-		{
-			while (top > 0 && stack[top - 1] != '(')
-			{
-				top--;
-				result[len] = stack[top];
-				len++;
-			}
-			if (top > 0)
-			{
-				top--;
-			}
-		}
-		else
-		{
-			if (top > 0)
-			{
-				if (priority(c) > priority(stack[i - 1]))
-				{
-					stack[top] = c;
-					top++;
-				}
-				else
-				{
-					result[len] = stack[top - 1];
-					stack[top - 1] = c;
-					len++;
-				}
-			}
-			else
-			{
-				stack[0] = c;
-				top++;
-			}
-		}
-	}
-
-	while (top > 0)
-	{
-		top--;
-		result[len] = stack[top];
-		len++;
-	}
-
-	result[len] = '\0';
+	postfix(f, result);
 
 	// Заполнение переменных
 
@@ -276,7 +323,7 @@ int main(int argc, char *argv[])
 		int numbers[1024];
 		int size = 0;
 
-		for (int i = 0; i < len; i++)
+		for (int i = 0; i < strlen(result); i++)
 		{
 			char l = result[i];
 			if (l >= 'a' && l <= 'z')
@@ -353,6 +400,14 @@ int main(int argc, char *argv[])
 	fictiv(n, vars, answers);
 
 	// Задание 7
-	printf("Для базисов {и, или, не}: %s", sdnf);
-	print("Для базиса {^}:");
+
+	printf("Для базисов {и, или, не}: %s\n", sdnf);
+
+	// Стрелка Пирса
+
+	char spirs[1024] = "";
+	char postfix_spirs[1024];
+	postfix(sdnf, postfix_spirs);
+	pirs(postfix_spirs, spirs);
+	printf("Для базиса {^}: %s\n", spirs);
 }
