@@ -214,9 +214,9 @@ void fictiv(int n, const int vars[], int answers[])
 	printf("\n");
 }
 
-// Стрелка Пирса
+// Стрелка Пирса / Штрих Шеффера
 
-void pirs(char group[], char result[])
+void pirs(char group[], char result[], int type)
 {
 	int len = strlen(group);
 	char stack[1024][1024];
@@ -233,22 +233,38 @@ void pirs(char group[], char result[])
 		}
 		else if (el == '!')
 		{
-			sprintf(buffer, "%s ^ %s", stack[size - 1], stack[size - 1]);
+			sprintf(buffer, type ? "%s ^ %s" : "%s # %s", stack[size - 1], stack[size - 1]);
 			strcpy(stack[size], buffer);
 			buffer[0] = '\0';
 		}
 		if (el == '*')
 		{
-			sprintf(buffer, "((%s ^ %s) ^ (%s ^ %s))", stack[size - 2], stack[size - 2], stack[size - 1], stack[size - 1]);
-			strcat(result, buffer);
+			if (type)
+			{
+				sprintf(buffer, "((%s ^ %s) ^ (%s ^ %s))", stack[size - 2], stack[size - 2], stack[size - 1], stack[size - 1]);
+				strcat(result, buffer);
+			}
+			else
+			{
+				sprintf(buffer, "((%s # %s) # (%s # %s))", stack[size - 1], stack[size - 2], stack[size - 1], stack[size - 2]);
+				strcat(result, buffer);
+			}
 			size--;
 			buffer[0] = '\0';
 			memset(buffer, 0, sizeof(buffer));
 		}
 		if (el == '+')
 		{
-			sprintf(buffer, "((%s ^ %s) ^ (%s ^ %s))", stack[size - 2], stack[size - 1], stack[size - 2], stack[size - 1]);
-			strcat(result, buffer);
+			if (type)
+			{
+				sprintf(buffer, "((%s ^ %s) ^ (%s ^ %s))", stack[size - 2], stack[size - 1], stack[size - 2], stack[size - 1]);
+				strcat(result, buffer);
+			}
+			else
+			{
+				sprintf(buffer, "((%s # %s) # (%s # %s))", stack[size - 2], stack[size - 2], stack[size - 1], stack[size - 1]);
+				strcat(result, buffer);
+			}
 			size--;
 			buffer[0] = '\0';
 			memset(buffer, 0, sizeof(buffer));
@@ -408,6 +424,14 @@ int main(int argc, char *argv[])
 	char spirs[1024] = "";
 	char postfix_spirs[1024];
 	postfix(sdnf, postfix_spirs);
-	pirs(postfix_spirs, spirs);
+	pirs(postfix_spirs, spirs, 1);
 	printf("Для базиса {^}: %s\n", spirs);
+
+	// Штрих Шеффера
+
+	char shef[1024] = "";
+	char postfix_shef[1024];
+	postfix(sdnf, postfix_shef);
+	pirs(postfix_shef, shef, 0);
+	printf("Для базиса {#}: %s\n", shef);
 }
